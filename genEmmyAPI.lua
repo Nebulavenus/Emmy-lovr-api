@@ -1,5 +1,5 @@
 
-local api = require('love_api')
+local api = require('init')
 
 local function safeDesc(src)
     return string.gsub(src, "\n", "\n---")
@@ -90,7 +90,7 @@ end
 local function genEnum(enum)
     local code = '---' .. safeDesc(enum.description) .. '\n'
     code = code .. enum.name .. ' = {\n'
-    for i, const in ipairs(enum.constants) do
+    for i, const in ipairs(enum.values) do
         code = code .. '\t---' .. safeDesc(const.description) .. '\n'
         local name = const.name
         if name == '\\' then
@@ -138,14 +138,16 @@ local function genModule(name, api)
     end
 
     -- functions
-    for i, fun in ipairs(api.functions) do
-        f:write(genFunction('m', fun, true))
-    end
+	if api.functions then
+		for i, fun in ipairs(api.functions) do
+			f:write(genFunction('m', fun, true))
+		end
+	end
 
     f:write("return m")
     f:close()
 end
 
-genModule('love', api)
+genModule('lovr', api)
 
 print('--finished.')
