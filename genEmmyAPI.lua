@@ -39,13 +39,17 @@ local function genFunction(moduleName, fun, static)
                     else
                         argList = argList .. ', ' .. argument.name
                     end
-                    code = code .. '---@param ' .. argument.name .. ' ' .. argument.type .. ' @' .. argument.description .. '\n'
+					if argument.type then
+					    code = code .. '---@param ' .. argument.name .. ' ' .. argument.type .. ' @' .. argument.description .. '\n'
+					end
                 end
             else
                 code = code .. '---@overload fun('
                 for argIdx, argument in ipairs(arguments) do
                     if argIdx == 1 then
-                        code = code .. argument.name .. ':' .. argument.type
+						if argument.type then
+						    code = code .. argument.name .. ':' .. argument.type
+						end
                     else
                         code = code .. ', '
                         code = code .. argument.name .. ':' .. argument.type
@@ -77,9 +81,9 @@ local function genType(name, type)
     code = code .. '\n'
     code = code .. '---' .. safeDesc(type.description) .. '\n'
     code = code .. 'local ' .. name ..  ' = {}\n'
-    -- functions
-    if type.functions then
-        for i, fun in ipairs(type.functions) do
+    -- methods
+    if type.methods then
+        for i, fun in ipairs(type.methods) do
             code = code .. genFunction(name, fun, false)
         end
     end
@@ -112,9 +116,9 @@ local function genModule(name, api)
     end
     f:write("local m = {}\n\n")
 
-    -- types
-    if api.types then
-        for i, type in ipairs(api.types) do
+    -- objects
+    if api.objects then
+        for i, type in ipairs(api.objects) do
             f:write('--region ' .. type.name .. '\n')
             f:write(genType(type.name, type))
             f:write('--endregion ' .. type.name .. '\n')
@@ -127,6 +131,17 @@ local function genModule(name, api)
             f:write(genEnum(enum))
         end
     end
+	
+	-- callbacks
+	--[[
+	if api.callbacks then
+		for i, m in ipairs(api.callbacks) do
+            f:write("---@type " .. name .. '.' .. m.name .. '\n')
+            f:write("m." .. m.name .. ' = nil\n\n')
+            genModule(name .. '.' .. m.name, m)
+        end
+	end
+	]]--
 
     -- modules
     if api.modules then
